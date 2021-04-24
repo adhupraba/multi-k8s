@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: postgres
+  template: 
+    metadata: 
+      labels: 
+        component: postgres
+    spec: 
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim: 
+            claimName: database-persistent-volume-claim
+      containers: 
+        - name: postgres
+          image: postgres
+          ports: 
+            - containerPort: 5432
+          volumeMounts:
+            - name:  postgres-storage
+              # the path given below is the default storage location for postgres
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+          env: 
+            # POSTGRES_PASSWORD is the env variable from the postgres image
+            # we are overriding the default postgres password with our own password
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
